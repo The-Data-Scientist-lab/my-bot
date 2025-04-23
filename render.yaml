@@ -13,5 +13,5 @@ services:
         sync: false
       - key: GOOGLE_SHEETS_WEBHOOK_URL
         sync: false
-      - key: TELEGRAM_PHONE
-        sync: false 
+    healthCheckPath: /
+    autoDeploy: true 
