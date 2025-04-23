@@ -4,7 +4,6 @@ import os
 import logging
 import asyncio
 import nest_asyncio
-from waitress import serve
 import time
 from telegram.ext import Application
 
@@ -49,5 +48,5 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     logger.info(f"Starting web server on port {port}")
     
-    # Use waitress instead of Flask's development server
-    serve(app, host='0.0.0.0', port=port, threads=4) 
+    # Run the Flask app
+    app.run(host='0.0.0.0', port=port) 
