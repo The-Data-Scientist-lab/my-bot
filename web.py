@@ -4,6 +4,7 @@ import os
 import logging
 import asyncio
 import nest_asyncio
+from waitress import serve
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,5 +43,5 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     logger.info(f"Starting web server on port {port}")
     
-    # Run the web server
-    app.run(host='0.0.0.0', port=port, debug=False) 
+    # Use waitress instead of Flask's development server
+    serve(app, host='0.0.0.0', port=port, threads=4) 
