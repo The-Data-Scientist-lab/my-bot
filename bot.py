@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import random
 import aiohttp
 import json
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Load environment variables
 load_dotenv()
@@ -71,7 +73,8 @@ def format_price_details(model, duration, price):
     }
 
 # Initialize the client with a unique session name for each deployment
-session_name = f'bot_session_{os.getenv("RAILWAY_ENVIRONMENT_ID", "local")}'
+platform = os.getenv("PLATFORM", "local")
+session_name = f'bot_session_{platform}'
 client = TelegramClient(session_name, os.getenv("TELEGRAM_API_ID"), os.getenv("TELEGRAM_API_HASH"))
 
 # Model information with enhanced details

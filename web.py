@@ -6,6 +6,7 @@ import asyncio
 import nest_asyncio
 from waitress import serve
 import time
+from telegram.ext import Application
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
