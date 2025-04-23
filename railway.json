@@ -8,5 +8,12 @@
     "startCommand": "python bot.py",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "variables": {
+    "TELEGRAM_API_ID": "",
+    "TELEGRAM_API_HASH": "",
+    "TELEGRAM_BOT_TOKEN": "",
+    "GOOGLE_SHEETS_WEBHOOK_URL": "",
+    "TELEGRAM_PHONE": ""
   }
 } 
