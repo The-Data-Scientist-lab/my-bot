@@ -27,7 +27,7 @@ def run_bot():
         
         import bot
         # Run the bot in the event loop
-        loop.run_until_complete(bot.main())
+        loop.run_until_complete(bot.start_bot())
     except Exception as e:
         logger.error(f"Bot error: {str(e)}")
     finally:
