@@ -22,4 +22,8 @@ services:
     disk:
       name: images
       mountPath: /opt/render/project/src/images
-      sizeGB: 1 
+      sizeGB: 1
+    env: python
+    plan: free
+    numInstances: 1
+    region: oregon 
