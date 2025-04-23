@@ -45,4 +45,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
-bot_session/ 
+bot_session/
+
+# Railway
+.railway/ 

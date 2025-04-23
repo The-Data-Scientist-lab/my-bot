@@ -70,8 +70,9 @@ def format_price_details(model, duration, price):
         "Price": f"₹{price}"
     }
 
-# Initialize the client
-client = TelegramClient('bot_session', os.getenv("TELEGRAM_API_ID"), os.getenv("TELEGRAM_API_HASH"))
+# Initialize the client with a unique session name for each deployment
+session_name = f'bot_session_{os.getenv("RAILWAY_ENVIRONMENT_ID", "local")}'
+client = TelegramClient(session_name, os.getenv("TELEGRAM_API_ID"), os.getenv("TELEGRAM_API_HASH"))
 
 # Model information with enhanced details
 MODELS = {
@@ -665,7 +666,7 @@ What to do next:
 💫 IMPORTANT NOTE 💫
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
-If everything is fine and money was debited from your account, don't worry! We will check your payment and let you know within 1 hour.
+If everything is fine and money was debited from your account, don't worry! We will check your payment and let you know within 3 hour.
 
 Please share your feedback about this experience:
 """

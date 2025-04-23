@@ -5,6 +5,7 @@ import logging
 import asyncio
 import nest_asyncio
 from waitress import serve
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,10 @@ def run_bot():
         loop.run_until_complete(bot.start_bot())
     except Exception as e:
         logger.error(f"Bot error: {str(e)}")
+        # Wait for 5 seconds before retrying
+        time.sleep(5)
+        # Restart the bot
+        run_bot()
     finally:
         loop.close()
 
