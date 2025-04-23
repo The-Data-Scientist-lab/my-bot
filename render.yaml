@@ -7,20 +7,22 @@ services:
       mkdir -p images
     startCommand: gunicorn web:app
     envVars:
-      - key: TELEGRAM_API_ID
-        sync: false
-      - key: TELEGRAM_API_HASH
-        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
-      - key: GOOGLE_SHEETS_WEBHOOK_URL
-        sync: false
-      - key: TELEGRAM_PHONE
-        sync: false
-    healthCheckPath: /
+        fromService:
+          name: telegram-bot
+          type: web
+          property: envVars.TELEGRAM_BOT_TOKEN
+      - key: TELEGRAM_CHAT_ID
+        fromService:
+          name: telegram-bot
+          type: web
+          property: envVars.TELEGRAM_CHAT_ID
+    healthCheckPath: /health
     autoDeploy: true
     disk:
-      name: images
+      name: data
       mountPath: /opt/render/project/src/images
       sizeGB: 1
     env: python
