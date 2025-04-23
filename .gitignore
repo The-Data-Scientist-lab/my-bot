@@ -45,5 +45,4 @@ ENV/
 .DS_Store
 Thumbs.db
 
-bot_session/
-images/ 
+bot_session/ 

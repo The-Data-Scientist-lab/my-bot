@@ -2,7 +2,9 @@ services:
   - type: web
     name: telegram-bot
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt
+      mkdir -p images
     startCommand: python bot.py
     envVars:
       - key: TELEGRAM_API_ID
@@ -13,5 +15,11 @@ services:
         sync: false
       - key: GOOGLE_SHEETS_WEBHOOK_URL
         sync: false
+      - key: TELEGRAM_PHONE
+        sync: false
     healthCheckPath: /
-    autoDeploy: true 
+    autoDeploy: true
+    disk:
+      name: images
+      mountPath: /opt/render/project/src/images
+      sizeGB: 1 
